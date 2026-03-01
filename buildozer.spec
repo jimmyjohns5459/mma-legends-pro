@@ -35,6 +35,10 @@ android.permissions  =
 # icon.filename     = %(source.dir)s/icon.png
 # presplash.filename = %(source.dir)s/presplash.png
 
+# ── python-for-android branch (develop has libffi 3.4.4 which works with
+#    modern autoconf 2.71+ on Ubuntu 22/24) ──────────────────────────────────
+p4a.branch = develop
+
 # ── Build settings ──────────────────────────────────────────────────────────
 log_level   = 2
 warn_on_root = 1
