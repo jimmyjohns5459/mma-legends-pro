@@ -7,7 +7,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Ubuntu 20.04 ships autoconf 2.69 which is compatible with the
+    # libffi 3.3 configure.ac used in python-for-android.
+    # Ubuntu 22/24 ships autoconf 2.71 which errors on LT_SYS_SYMBOL_USCORE.
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout code
@@ -27,7 +30,7 @@ jobs:
             build-essential ccache \
             libssl-dev libffi-dev \
             libsqlite3-dev \
-            autoconf automake libtool libtool-bin \
+            autoconf automake libtool \
             pkg-config cmake
 
       - name: Install Buildozer & Cython
@@ -35,31 +38,16 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython
 
-      - name: Accept Android SDK licenses
-        run: |
-          mkdir -p $ANDROID_SDK_ROOT/licenses
-          echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_SDK_ROOT/licenses/android-sdk-license
-          echo "84831b9409646a918e30573bab4c9c91346d8abd" >> $ANDROID_SDK_ROOT/licenses/android-sdk-license
-          echo "d975f751698a77b662f1254ddbeed3901e976f5a" > $ANDROID_SDK_ROOT/licenses/android-sdk-preview-license
-          echo "601085b94cd77f0b54ff86406957099ebe79c4d6" > $ANDROID_SDK_ROOT/licenses/android-googletv-license
-        env:
-          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-
       - name: Cache Buildozer global dir
         uses: actions/cache@v4
         with:
           path: ~/.buildozer
-          key: ${{ runner.os }}-buildozer-p4a-develop-${{ hashFiles('buildozer.spec') }}
+          key: ${{ runner.os }}-ubuntu20-buildozer-${{ hashFiles('buildozer.spec') }}
           restore-keys: |
-            ${{ runner.os }}-buildozer-p4a-develop-
+            ${{ runner.os }}-ubuntu20-buildozer-
 
       - name: Build APK
         run: buildozer android debug 2>&1
-        env:
-          ANDROIDSDK: /usr/local/lib/android/sdk
-          ANDROIDNDK: /usr/local/lib/android/sdk/ndk/27.3.13750724
-          ANDROIDAPI: "33"
-          ANDROIDMINAPI: "21"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
