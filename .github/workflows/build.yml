@@ -23,9 +23,9 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y \
             python3-pip python3-venv git unzip \
-            openjdk-17-jdk autoconf libtool \
+            openjdk-17-jdk autoconf libtool libtool-bin \
             build-essential libssl-dev libffi-dev \
-            libsqlite3-dev zip
+            libsqlite3-dev zip m4 cmake
 
       - name: Install Buildozer & Cython
         run: |
