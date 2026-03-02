@@ -7,10 +7,7 @@ on:
 
 jobs:
   build:
-    # Ubuntu 20.04 ships autoconf 2.69 which is compatible with the
-    # libffi 3.3 configure.ac used in python-for-android.
-    # Ubuntu 22/24 ships autoconf 2.71 which errors on LT_SYS_SYMBOL_USCORE.
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout code
@@ -30,8 +27,21 @@ jobs:
             build-essential ccache \
             libssl-dev libffi-dev \
             libsqlite3-dev \
-            autoconf automake libtool \
+            autoconf automake libtool libtool-bin \
             pkg-config cmake
+
+      - name: Fix autoconf macro compatibility (LT_SYS_SYMBOL_USCORE)
+        run: |
+          # autoconf 2.71 errors on undefined macros used in libffi 3.3 configure.ac.
+          # Wrap autoconf so autoreconf calls it with -Wno-portability to suppress.
+          sudo tee /usr/local/bin/autoconf > /dev/null << 'EOF'
+          #!/bin/bash
+          exec /usr/bin/autoconf -Wno-portability "$@"
+          EOF
+          sudo chmod +x /usr/local/bin/autoconf
+          # Verify the wrapper is picked up first
+          which autoconf
+          autoconf --version | head -1
 
       - name: Install Buildozer & Cython
         run: |
@@ -42,9 +52,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.buildozer
-          key: ${{ runner.os }}-ubuntu20-buildozer-${{ hashFiles('buildozer.spec') }}
+          key: ${{ runner.os }}-ubuntu22-buildozer-${{ hashFiles('buildozer.spec') }}
           restore-keys: |
-            ${{ runner.os }}-ubuntu20-buildozer-
+            ${{ runner.os }}-ubuntu22-buildozer-
 
       - name: Build APK
         run: buildozer android debug 2>&1
